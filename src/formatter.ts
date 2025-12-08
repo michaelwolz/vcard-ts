@@ -1,0 +1,300 @@
+/**
+ * VCard 3.0 Formatter
+ * Converts VCard objects to RFC 2426 compliant strings
+ */
+
+import type { Address, Email, Media, Name, Telephone, VCard } from './types.js';
+import { escapeParamValue, escapeText, foldLine, formatDate, formatDateTime } from './utils.js';
+
+/**
+ * Format a VCard object into a valid VCard 3.0 string
+ * @param vcard - VCard object to format
+ * @param options - Optional formatting options
+ * @returns RFC 2426 compliant VCard string
+ */
+export function formatVCard(vcard: VCard, options?: { includeContentType?: boolean }): string {
+  const lines: string[] = [];
+
+  // Content-Type header (OPTIONAL - for MIME encapsulation)
+  if (options?.includeContentType === true || vcard.charset !== undefined) {
+    const charset = vcard.charset ?? 'UTF-8';
+    lines.push(`Content-Type: text/directory;profile=vcard;charset=${charset}`);
+    lines.push(''); // Blank line after header
+  }
+
+  // BEGIN (REQUIRED)
+  lines.push('BEGIN:VCARD');
+
+  // VERSION (REQUIRED)
+  lines.push('VERSION:3.0');
+
+  // FN - Formatted Name (REQUIRED)
+  lines.push(`FN:${escapeText(vcard.formattedName)}`);
+
+  // N - Structured Name (REQUIRED)
+  lines.push(formatName(vcard.name));
+
+  // NICKNAME (OPTIONAL)
+  if (vcard.nickname !== undefined && vcard.nickname.length > 0) {
+    lines.push(`NICKNAME:${vcard.nickname.map(escapeText).join(',')}`);
+  }
+
+  // PHOTO (OPTIONAL)
+  if (vcard.photo !== undefined) {
+    lines.push(...formatMedia('PHOTO', vcard.photo));
+  }
+
+  // BDAY (OPTIONAL)
+  if (vcard.birthday !== undefined) {
+    const bdayValue = vcard.birthday instanceof Date ? formatDate(vcard.birthday) : vcard.birthday;
+    lines.push(`BDAY:${bdayValue}`);
+  }
+
+  // ADR - Addresses (OPTIONAL)
+  if (vcard.addresses !== undefined) {
+    vcard.addresses.forEach((addr) => {
+      lines.push(formatAddress(addr));
+    });
+  }
+
+  // LABEL (OPTIONAL)
+  if (vcard.labels !== undefined) {
+    vcard.labels.forEach((label) => {
+      const typeParam = label.types !== undefined && label.types.length > 0 ? `;TYPE=${label.types.join(',')}` : '';
+      lines.push(`LABEL${typeParam}:${escapeText(label.value)}`);
+    });
+  }
+
+  // TEL - Telephones (OPTIONAL)
+  if (vcard.telephones !== undefined) {
+    vcard.telephones.forEach((tel) => {
+      lines.push(formatTelephone(tel));
+    });
+  }
+
+  // EMAIL (OPTIONAL)
+  if (vcard.emails !== undefined) {
+    vcard.emails.forEach((email) => {
+      lines.push(formatEmail(email));
+    });
+  }
+
+  // MAILER (OPTIONAL)
+  if (vcard.mailer !== undefined) {
+    lines.push(`MAILER:${escapeText(vcard.mailer)}`);
+  }
+
+  // TZ - Timezone (OPTIONAL)
+  if (vcard.timezone !== undefined) {
+    // RFC 2426 default is utc-offset; it can be reset to text using VALUE=text.
+    const tz = vcard.timezone;
+    const isUtcOffset = /^[+-]\d{2}:\d{2}$/.test(tz);
+    lines.push(isUtcOffset ? `TZ:${tz}` : `TZ;VALUE=text:${escapeText(tz)}`);
+  }
+
+  // GEO - Geographic Position (OPTIONAL)
+  if (vcard.geo !== undefined) {
+    lines.push(`GEO:${vcard.geo.latitude.toString()};${vcard.geo.longitude.toString()}`);
+  }
+
+  // TITLE (OPTIONAL)
+  if (vcard.title !== undefined) {
+    lines.push(`TITLE:${escapeText(vcard.title)}`);
+  }
+
+  // ROLE (OPTIONAL)
+  if (vcard.role !== undefined) {
+    lines.push(`ROLE:${escapeText(vcard.role)}`);
+  }
+
+  // LOGO (OPTIONAL)
+  if (vcard.logo !== undefined) {
+    lines.push(...formatMedia('LOGO', vcard.logo));
+  }
+
+  // AGENT (OPTIONAL)
+  if (vcard.agent !== undefined) {
+    if (vcard.agent.uri !== undefined) {
+      lines.push(`AGENT;VALUE=uri:${vcard.agent.uri}`);
+    } else if (vcard.agent.value !== undefined) {
+      lines.push(`AGENT:${escapeText(vcard.agent.value)}`);
+    }
+  }
+
+  // ORG - Organization (OPTIONAL)
+  if (vcard.organization !== undefined) {
+    const orgParts: string[] = [];
+    if (vcard.organization.name !== undefined) {
+      orgParts.push(escapeText(vcard.organization.name));
+    }
+    if (vcard.organization.units !== undefined && vcard.organization.units.length > 0) {
+      orgParts.push(...vcard.organization.units.map(escapeText));
+    }
+    if (orgParts.length > 0) {
+      lines.push(`ORG:${orgParts.join(';')}`);
+    }
+  }
+
+  // CATEGORIES (OPTIONAL)
+  if (vcard.categories !== undefined && vcard.categories.length > 0) {
+    lines.push(`CATEGORIES:${vcard.categories.map(escapeText).join(',')}`);
+  }
+
+  // NOTE (OPTIONAL)
+  if (vcard.note !== undefined) {
+    lines.push(`NOTE:${escapeText(vcard.note)}`);
+  }
+
+  // PRODID (OPTIONAL)
+  if (vcard.productId !== undefined) {
+    lines.push(`PRODID:${escapeText(vcard.productId)}`);
+  }
+
+  // REV - Revision (OPTIONAL)
+  if (vcard.revision !== undefined) {
+    const revValue = vcard.revision instanceof Date ? formatDateTime(vcard.revision) : vcard.revision;
+    lines.push(`REV:${revValue}`);
+  }
+
+  // SORT-STRING (OPTIONAL)
+  if (vcard.sortString !== undefined) {
+    lines.push(`SORT-STRING:${escapeText(vcard.sortString)}`);
+  }
+
+  // SOUND (OPTIONAL)
+  if (vcard.sound !== undefined) {
+    lines.push(...formatMedia('SOUND', vcard.sound));
+  }
+
+  // UID (OPTIONAL)
+  if (vcard.uid !== undefined) {
+    lines.push(`UID:${escapeText(vcard.uid)}`);
+  }
+
+  // URL (OPTIONAL)
+  if (vcard.url !== undefined) {
+    lines.push(`URL:${vcard.url}`);
+  }
+
+  // CLASS (OPTIONAL)
+  if (vcard.class !== undefined) {
+    lines.push(`CLASS:${vcard.class}`);
+  }
+
+  // KEY (OPTIONAL)
+  if (vcard.key !== undefined) {
+    lines.push(...formatMedia('KEY', vcard.key));
+  }
+
+  // Custom Properties (X- properties per RFC 2426)
+  if (vcard.customProperties !== undefined && vcard.customProperties.length > 0) {
+    for (const prop of vcard.customProperties) {
+      let line = prop.name.toUpperCase();
+
+      // Add parameters if present
+      if (prop.params !== undefined && Object.keys(prop.params).length > 0) {
+        const params = Object.entries(prop.params)
+          .map(([key, value]) => `${key.toUpperCase()}=${escapeParamValue(value)}`)
+          .join(';');
+        line += `;${params}`;
+      }
+
+      line += `:${escapeText(prop.value)}`;
+      lines.push(line);
+    }
+  }
+
+  // END (REQUIRED)
+  lines.push('END:VCARD');
+
+  // Fold lines longer than 75 characters
+  return lines.map(foldLine).join('\r\n');
+}
+
+/**
+ * Format the N (Name) property
+ */
+function formatName(name: Name): string {
+  const familyName = name.familyName !== undefined ? escapeText(name.familyName) : '';
+  const givenName = name.givenName !== undefined ? escapeText(name.givenName) : '';
+  const additionalNames =
+    name.additionalNames !== undefined && name.additionalNames.length > 0
+      ? name.additionalNames.map(escapeText).join(',')
+      : '';
+  const prefixes =
+    name.honorificPrefixes !== undefined && name.honorificPrefixes.length > 0
+      ? name.honorificPrefixes.map(escapeText).join(',')
+      : '';
+  const suffixes =
+    name.honorificSuffixes !== undefined && name.honorificSuffixes.length > 0
+      ? name.honorificSuffixes.map(escapeText).join(',')
+      : '';
+
+  return `N:${familyName};${givenName};${additionalNames};${prefixes};${suffixes}`;
+}
+
+/**
+ * Format the ADR (Address) property
+ */
+function formatAddress(address: Address): string {
+  const typeParam = address.types !== undefined && address.types.length > 0 ? `;TYPE=${address.types.join(',')}` : '';
+
+  const poBox = address.postOfficeBox !== undefined ? escapeText(address.postOfficeBox) : '';
+  const extAddr = address.extendedAddress !== undefined ? escapeText(address.extendedAddress) : '';
+  const street = address.street !== undefined ? escapeText(address.street) : '';
+  const locality = address.locality !== undefined ? escapeText(address.locality) : '';
+  const region = address.region !== undefined ? escapeText(address.region) : '';
+  const postalCode = address.postalCode !== undefined ? escapeText(address.postalCode) : '';
+  const country = address.country !== undefined ? escapeText(address.country) : '';
+
+  return `ADR${typeParam}:${poBox};${extAddr};${street};${locality};${region};${postalCode};${country}`;
+}
+
+/**
+ * Format the TEL (Telephone) property
+ */
+function formatTelephone(tel: Telephone): string {
+  const typeParam = tel.types !== undefined && tel.types.length > 0 ? `;TYPE=${tel.types.join(',')}` : '';
+  return `TEL${typeParam}:${tel.value}`;
+}
+
+/**
+ * Format the EMAIL property
+ */
+function formatEmail(email: Email): string {
+  const typeParam = email.types !== undefined && email.types.length > 0 ? `;TYPE=${email.types.join(',')}` : '';
+  return `EMAIL${typeParam}:${escapeText(email.value)}`;
+}
+
+/**
+ * Format media properties (PHOTO, LOGO, SOUND, KEY)
+ */
+function formatMedia(propertyName: string, media: Media): string[] {
+  const lines: string[] = [];
+
+  // KEY is special in RFC 2426: it supports text or inline binary, not uri.
+  if (propertyName === 'KEY') {
+    if (media.uri !== undefined) {
+      // Treat uri as a plain text key value (e.g., a URL string). Do NOT emit VALUE=uri.
+      lines.push(`KEY:${escapeText(media.uri)}`);
+      return lines;
+    }
+
+    const typeParam = media.mediaType !== undefined ? `;TYPE=${media.mediaType}` : '';
+    lines.push(`KEY;ENCODING=b${typeParam}:${media.value}`);
+    return lines;
+  }
+
+  if (media.uri !== undefined) {
+    // URI reference
+    const typeParam = media.mediaType !== undefined ? `;TYPE=${media.mediaType}` : '';
+    lines.push(`${propertyName};VALUE=uri${typeParam}:${media.uri}`);
+  } else {
+    // Inline binary data
+    const typeParam = media.mediaType !== undefined ? `;TYPE=${media.mediaType}` : '';
+    // RFC 2426 requires ENCODING=b for inline binary values.
+    lines.push(`${propertyName};ENCODING=b${typeParam}:${media.value}`);
+  }
+
+  return lines;
+}

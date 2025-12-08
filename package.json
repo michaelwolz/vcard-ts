@@ -1,14 +1,20 @@
 {
   "name": "vcard-ts",
   "version": "1.0.0",
-  "description": "A modern TypeScript library with browser and Node.js support",
+  "description": "A simple, modern TypeScript library for VCard 3.0 (RFC 2426) with browser and Node.js support",
   "keywords": [
+    "vcard",
+    "vcard3",
+    "vcf",
+    "rfc2426",
+    "contact",
+    "business-card",
     "typescript",
     "library",
     "browser",
     "node"
   ],
-  "license": "ISC",
+  "license": "Apache-2.0",
   "author": "",
   "type": "module",
   "exports": {
@@ -32,6 +38,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "example": "tsx demo/example.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -45,12 +52,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@vitest/coverage-v8": "^4.0.15",
     "@vitest/ui": "^4.0.15",
     "eslint": "^9.39.1",
     "prettier": "^3.7.4",
     "prettier-plugin-organize-imports": "^4.3.0",
     "prettier-plugin-packagejson": "^2.5.20",
     "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.49.0",
     "vitest": "^4.0.15"

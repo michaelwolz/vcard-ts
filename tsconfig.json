@@ -25,7 +25,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
 
-    /* Type Checking - SUPER STRICT MODE */
+    /* Type Checking */
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -49,5 +49,5 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "**/*.example.ts"]
 }
