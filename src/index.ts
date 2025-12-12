@@ -16,8 +16,9 @@ export type {
   Geo,
   Media,
   Name,
-  Telephone,
-  TelephoneType,
+  Phone as Telephone,
+  PhoneType as TelephoneType,
+  Url,
   VCard,
 } from './types.js';
 

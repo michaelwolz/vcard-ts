@@ -29,7 +29,7 @@ export type Address = {
  * Allowed values for the `TYPE` parameter on TEL.
  * RFC 2426 allows additional IANA tokens / X- names.
  */
-export type TelephoneType =
+export type PhoneType =
   | 'home'
   | 'msg'
   | 'work'
@@ -45,9 +45,9 @@ export type TelephoneType =
   | 'isdn'
   | 'pcs';
 
-export type Telephone = {
+export type Phone = {
   value: string;
-  types?: TelephoneType[];
+  types?: PhoneType[];
 };
 
 /**
@@ -127,6 +127,17 @@ export type CustomProperty = {
 };
 
 /**
+ * URL entry.
+ *
+ * If `type` is provided, it is used as an iOS label via `itemN.X-ABLabel`.
+ * This is an Apple extension (not part of RFC 2426), but is widely supported on iOS.
+ */
+export type Url = {
+  value: string;
+  type?: string;
+};
+
+/**
  * Main vCard object.
  * RFC 2426 requires FN, N and VERSION.
  */
@@ -149,7 +160,7 @@ export type VCard = {
   labels?: { value: string; types?: AddressType[] }[];
 
   // OPTIONAL - Telecommunications
-  telephones?: Telephone[];
+  phones?: Phone[];
   emails?: Email[];
   mailer?: string;
 
@@ -172,6 +183,13 @@ export type VCard = {
   sortString?: string;
   sound?: Media;
   url?: string;
+  /**
+   * Multiple URLs, optionally with labels.
+   *
+   * When present, the formatter emits grouped URL lines (`itemN.URL`) and, if `type` is set,
+   * also emits `itemN.X-ABLabel` for iOS display labels.
+   */
+  urls?: Url[];
   uid?: string;
 
   // OPTIONAL - Security

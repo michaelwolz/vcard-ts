@@ -101,7 +101,7 @@ describe('formatVCard', () => {
         familyName: 'Johnson',
         givenName: 'Bob',
       },
-      telephones: [
+      phones: [
         {
           value: '+1-555-1234',
           types: ['work', 'voice'],
@@ -240,6 +240,51 @@ describe('formatVCard', () => {
     expect(result).toContain('UID:urn:uuid:12345678-1234-1234-1234-123456789012');
   });
 
+  it('should format multiple URLs with iOS labels using itemN.URL and itemN.X-ABLabel', () => {
+    const vcard: VCard = {
+      version: '3.0',
+      formattedName: 'Michael Wolz',
+      name: { familyName: 'Wolz', givenName: 'Michael' },
+      urls: [
+        { value: 'https://www.linkedin.com/in/michaelwolz', type: 'LinkedIn' },
+        { value: 'https://michaelwolz.de', type: 'Website' },
+      ],
+    };
+
+    const result = formatVCard(vcard);
+    expect(result).toContain('item1.URL:https://www.linkedin.com/in/michaelwolz');
+    expect(result).toContain('item1.X-ABLabel:LinkedIn');
+    expect(result).toContain('item2.URL:https://michaelwolz.de');
+    expect(result).toContain('item2.X-ABLabel:Website');
+  });
+
+  it('should escape special characters in iOS URL labels', () => {
+    const vcard: VCard = {
+      version: '3.0',
+      formattedName: 'Label Test',
+      name: { familyName: 'Test' },
+      urls: [{ value: 'https://example.com', type: 'Foo; Bar, Inc.' }],
+    };
+
+    const result = formatVCard(vcard);
+    expect(result).toContain('item1.X-ABLabel:Foo\\; Bar\\, Inc.');
+  });
+
+  it('should not emit both urls[] and url when they are the same', () => {
+    const vcard: VCard = {
+      version: '3.0',
+      formattedName: 'Dedup Test',
+      name: { familyName: 'Test' },
+      url: 'https://example.com',
+      urls: [{ value: 'https://example.com', type: 'Website' }],
+    };
+
+    const result = formatVCard(vcard);
+    expect(result).toContain('item1.URL:https://example.com');
+    expect(result).toContain('item1.X-ABLabel:Website');
+    expect(result).not.toMatch(/(^|\r\n)URL:https:\/\/example\.com(\r\n|$)/);
+  });
+
   it('should format classification', () => {
     const vcard: VCard = {
       version: '3.0',
@@ -270,7 +315,7 @@ describe('formatVCard', () => {
       },
       title: 'Software Engineer',
       emails: [{ value: 'john@example.com', types: ['internet', 'pref'] }],
-      telephones: [{ value: '+1-555-1234', types: ['work', 'voice'] }],
+      phones: [{ value: '+1-555-1234', types: ['work', 'voice'] }],
       addresses: [
         {
           street: '123 Main St',

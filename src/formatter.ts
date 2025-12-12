@@ -3,7 +3,7 @@
  * Converts VCard objects to RFC 2426 compliant strings
  */
 
-import type { Address, Email, Media, Name, Telephone, VCard } from './types.js';
+import type { Address, Email, Media, Name, Phone, Url, VCard } from './types.js';
 import { escapeParamValue, escapeText, foldLine, formatDate, formatDateTime } from './utils.js';
 
 /**
@@ -65,9 +65,9 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
     });
   }
 
-  // TEL - Telephones (OPTIONAL)
-  if (vcard.telephones !== undefined) {
-    vcard.telephones.forEach((tel) => {
+  // TEL - phones (OPTIONAL)
+  if (vcard.phones !== undefined) {
+    vcard.phones.forEach((tel) => {
       lines.push(formatTelephone(tel));
     });
   }
@@ -171,9 +171,20 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
     lines.push(`UID:${escapeText(vcard.uid)}`);
   }
 
-  // URL (OPTIONAL)
+  // URL(s) (OPTIONAL)
+  // - RFC 2426: URL itself has no parameters, but group prefixes are allowed.
+  // - iOS: labels for URLs are commonly supported via the Apple extension `X-ABLabel`.
+  if (vcard.urls !== undefined && vcard.urls.length > 0) {
+    lines.push(...formatUrlsForApple(vcard.urls));
+  }
+
+  // Keep the legacy single URL field as a plain URL line.
+  // If it duplicates an entry in `urls`, omit it to avoid double display.
   if (vcard.url !== undefined) {
-    lines.push(`URL:${vcard.url}`);
+    const alreadyPresent = vcard.urls?.some((u) => u.value === vcard.url) ?? false;
+    if (!alreadyPresent) {
+      lines.push(`URL:${vcard.url}`);
+    }
   }
 
   // CLASS (OPTIONAL)
@@ -209,6 +220,22 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
 
   // Fold lines longer than 75 characters
   return lines.map(foldLine).join('\r\n');
+}
+
+function formatUrlsForApple(urls: Url[]): string[] {
+  const lines: string[] = [];
+
+  urls.forEach((entry, index) => {
+    const group = `item${(index + 1).toString()}`;
+    lines.push(`${group}.URL:${entry.value}`);
+
+    if (entry.type !== undefined && entry.type.trim() !== '') {
+      // iOS label; value is TEXT and must be escaped.
+      lines.push(`${group}.X-ABLabel:${escapeText(entry.type)}`);
+    }
+  });
+
+  return lines;
 }
 
 /**
@@ -253,7 +280,7 @@ function formatAddress(address: Address): string {
 /**
  * Format the TEL (Telephone) property
  */
-function formatTelephone(tel: Telephone): string {
+function formatTelephone(tel: Phone): string {
   const typeParam = tel.types !== undefined && tel.types.length > 0 ? `;TYPE=${tel.types.join(',')}` : '';
   return `TEL${typeParam}:${tel.value}`;
 }

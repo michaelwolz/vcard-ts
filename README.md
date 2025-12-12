@@ -11,6 +11,7 @@ A simple, modern TypeScript library for creating VCard 3.0 (RFC 2426) formatted 
 - 🌐 **Universal** - Works in browser and Node.js
 - ✨ **Modern** - ESM + CommonJS, tree-shakeable
 - 🧪 **Well Tested** - Comprehensive test coverage
+- 🍏 **iOS URL Labels** - Supports multiple URLs with human-friendly labels in Apple Contacts
 
 ## Why VCard 3.0?
 
@@ -20,6 +21,44 @@ While VCard 4.0 exists, as of right now 3.0 remains the most widely supported fo
 
 ```bash
 npm install vcard-ts
+```
+
+## Releasing (Semantic Release)
+
+This project uses `semantic-release` and **Conventional Commits** to automatically version, generate release notes + `CHANGELOG.md`, create a GitHub Release, and publish to npm.
+
+### Commit message format (Conventional Commits)
+
+Examples:
+
+- `fix: handle folded lines correctly`
+- `feat: support multiple labeled URLs`
+- `docs: update usage examples`
+- `chore: update dependencies`
+
+Breaking changes:
+
+- Add `!` after the type/scope: `feat!: change VCard type names`
+- Or include `BREAKING CHANGE:` in the commit body
+
+### First release
+
+The initial release version is **`0.0.1`** (pre-1.0, treat as beta).
+
+Note: Semantic Release determines versions from git tags and Conventional Commits. To guarantee the *first* Semantic Release publish ends up as `0.0.1`, create and push a bootstrap tag `v0.0.0` before the first run.
+
+### CI / GitHub Actions setup
+
+The workflow in [.github/workflows/release.yml](.github/workflows/release.yml) runs on pushes to `main`/`master`.
+
+Required repo secrets:
+
+- `NPM_TOKEN`: an npm access token with publish rights for this package
+
+### Dry run
+
+```bash
+npm run release:dry
 ```
 
 ## Usage
@@ -144,6 +183,45 @@ const vcard: VCard = {
 // newline -> \n
 ```
 
+### Multiple URLs + iOS Labels
+
+Many consumers (including iOS Contacts) support multiple `URL` entries but won’t display a meaningful label unless you use Apple’s extension fields.
+
+This library supports that via `urls`, emitting `itemN.URL` + `itemN.X-ABLabel`. The `item1.`, `item2.`, etc. prefix is the vCard *group* syntax: it scopes multiple related lines under the same group name. So that `item1.X-ABLabel` can be associated with `item1.URL`.
+
+The `X-ABLabel` property is an Apple-specific `X-` extension used by iOS Contacts to display a human-friendly label for the preceding `itemN.URL` field (e.g. “LinkedIn”, “Website”). This is usually not supported on Android.
+
+```typescript
+import { formatVCard, type VCard } from 'vcard-ts';
+
+const vcard: VCard = {
+  version: '3.0',
+  formattedName: 'Michael Wolz',
+  name: { familyName: 'Wolz', givenName: 'Michael' },
+  urls: [
+    { value: 'https://www.linkedin.com/in/michaelwolz', type: 'LinkedIn' },
+    { value: 'https://michaelwolz.de', type: 'Website' },
+  ],
+};
+
+console.log(formatVCard(vcard));
+```
+
+Output (excerpt):
+
+```
+item1.URL:https://www.linkedin.com/in/michaelwolz
+item1.X-ABLabel:LinkedIn
+item2.URL:https://michaelwolz.de
+item2.X-ABLabel:Website
+```
+
+Notes:
+
+- iOS: shows both URLs and the labels.
+- Android: typically shows both URLs, but often ignores the `X-ABLabel` labels.
+- vCard 4.0 supports richer, standardized URL typing, but vCard 3.0 tends to have broader real-world compatibility; this is a practical workaround.
+
 ## API Reference
 
 ### Type: VCard
@@ -163,10 +241,11 @@ See the TypeScript definitions for the complete list of optional fields includin
 - Character Set: `charset` - Character encoding (e.g., 'UTF-8', 'ISO-8859-1')
 - Identification: `nickname`, `photo`, `birthday`
 - Delivery Addressing: `addresses`, `labels`
-- Telecommunications: `telephones`, `emails`, `mailer`
+- Telecommunications: `phones`, `emails`, `mailer`
 - Geographical: `timezone`, `geo`
 - Organizational: `title`, `role`, `logo`, `agent`, `organization`
 - Explanatory: `categories`, `note`, `productId`, `revision`, `sortString`, `sound`, `url`, `uid`
+- URLs: `url` (single) and `urls` (multiple + optional iOS labels)
 - Security: `class`, `key`
 
 ### Function: formatVCard

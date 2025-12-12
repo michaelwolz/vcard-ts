@@ -1,6 +1,6 @@
 {
   "name": "vcard-ts",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A simple, modern TypeScript library for VCard 3.0 (RFC 2426) with browser and Node.js support",
   "keywords": [
     "vcard",
@@ -14,8 +14,12 @@
     "browser",
     "node"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michaelwolz/vcard-ts.git"
+  },
   "license": "Apache-2.0",
-  "author": "",
+  "author": "Michael Wolz",
   "type": "module",
   "exports": {
     ".": {
@@ -44,6 +48,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepublishOnly": "npm run build",
+    "release": "semantic-release",
+    "release:dry": "semantic-release --dry-run",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
@@ -51,13 +57,23 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
     "@eslint/js": "^9.39.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.6",
+    "@semantic-release/npm": "^12.0.2",
+    "@semantic-release/release-notes-generator": "^14.1.0",
     "@vitest/coverage-v8": "^4.0.15",
     "@vitest/ui": "^4.0.15",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
     "eslint": "^9.39.1",
     "prettier": "^3.7.4",
     "prettier-plugin-organize-imports": "^4.3.0",
     "prettier-plugin-packagejson": "^2.5.20",
+    "semantic-release": "^24.2.9",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",

@@ -34,7 +34,7 @@ const businessContact: VCard = {
   },
   title: 'Senior Developer',
   emails: [{ value: 'jane.smith@techcorp.com', types: ['internet', 'pref'] }],
-  telephones: [
+  phones: [
     { value: '+1-555-0100', types: ['work', 'voice'] },
     { value: '+1-555-0101', types: ['work', 'cell'] },
   ],
@@ -66,7 +66,7 @@ const personalContact: VCard = {
   nickname: ['Bob', 'Bobby'],
   birthday: new Date('1990-06-15'),
   emails: [{ value: 'bob@example.com', types: ['internet'] }],
-  telephones: [
+  phones: [
     { value: '+1-555-0200', types: ['home', 'voice'] },
     { value: '+1-555-0201', types: ['cell'] },
   ],
@@ -142,7 +142,7 @@ const completeVCard: VCard = {
     { value: 'm.thompson@medcenter.org', types: ['internet', 'pref'] },
     { value: 'mike@personal.com', types: ['internet'] },
   ],
-  telephones: [
+  phones: [
     { value: '+1-555-0300', types: ['work', 'voice'] },
     { value: '+1-555-0301', types: ['work', 'fax'] },
     { value: '+1-555-0302', types: ['cell'] },
@@ -173,3 +173,20 @@ const completeVCard: VCard = {
   class: 'PUBLIC',
 };
 console.log(formatVCard(completeVCard));
+console.log('\n');
+
+// Example 6: Multiple links with different types
+console.log('=== Example 6: VCard with Multiple Links ===\n');
+const vcardWithLinks: VCard = {
+  version: '3.0',
+  formattedName: 'Emily White',
+  name: {
+    familyName: 'White',
+    givenName: 'Emily',
+  },
+  urls: [
+    { value: 'https://linkedin.com/in/emilywhite', type: 'LinkedIn' },
+    { value: 'https://emiliywhite.dev', type: 'Personal' },
+  ],
+};
+console.log(formatVCard(vcardWithLinks));
