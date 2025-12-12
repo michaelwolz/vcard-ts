@@ -23,44 +23,6 @@ While VCard 4.0 exists, as of right now 3.0 remains the most widely supported fo
 npm install vcard-ts
 ```
 
-## Releasing (Semantic Release)
-
-This project uses `semantic-release` and **Conventional Commits** to automatically version, generate release notes + `CHANGELOG.md`, create a GitHub Release, and publish to npm.
-
-### Commit message format (Conventional Commits)
-
-Examples:
-
-- `fix: handle folded lines correctly`
-- `feat: support multiple labeled URLs`
-- `docs: update usage examples`
-- `chore: update dependencies`
-
-Breaking changes:
-
-- Add `!` after the type/scope: `feat!: change VCard type names`
-- Or include `BREAKING CHANGE:` in the commit body
-
-### First release
-
-The initial release version is **`0.0.1`** (pre-1.0, treat as beta).
-
-Note: Semantic Release determines versions from git tags and Conventional Commits. To guarantee the *first* Semantic Release publish ends up as `0.0.1`, create and push a bootstrap tag `v0.0.0` before the first run.
-
-### CI / GitHub Actions setup
-
-The workflow in [.github/workflows/release.yml](.github/workflows/release.yml) runs on pushes to `main`/`master`.
-
-Required repo secrets:
-
-- `NPM_TOKEN`: an npm access token with publish rights for this package
-
-### Dry run
-
-```bash
-npm run release:dry
-```
-
 ## Usage
 
 ### Basic Example
@@ -86,14 +48,18 @@ Output:
 ```
 BEGIN:VCARD
 VERSION:3.0
-FN:John Doe
-N:Doe;John;;;
+FN;CHARSET=UTF-8:John Doe
+N;CHARSET=UTF-8:Doe;John;;;
 END:VCARD
 ```
 
 ### Character Set Support
 
-VCard 3.0 supports specifying a character set. You can set the `charset` property to include a Content-Type header:
+VCard 3.0 supports specifying a character set via the `CHARSET` parameter on text properties (RFC 2426).
+
+This library emits `;CHARSET=...` on text fields like `FN`, `N`, `NOTE`, etc.
+
+Default charset is `UTF-8`.
 
 ```typescript
 import { formatVCard, type VCard } from 'vcard-ts';
@@ -105,7 +71,6 @@ const vcard: VCard = {
     familyName: 'García',
     givenName: 'José',
   },
-  charset: 'UTF-8', // Adds Content-Type header
 };
 
 const vcardString = formatVCard(vcard);
@@ -115,21 +80,17 @@ console.log(vcardString);
 Output:
 
 ```
-Content-Type: text/directory;profile=vcard;charset=UTF-8
-
 BEGIN:VCARD
 VERSION:3.0
-FN:José García
-N:García;José;;;
+FN;CHARSET=UTF-8:José García
+N;CHARSET=UTF-8:García;José;;;
 END:VCARD
 ```
 
-Supported charsets include `UTF-8` (recommended), `ISO-8859-1`, or any valid charset string. If no charset is specified, no Content-Type header is included (suitable for most modern applications).
-
-You can also force a Content-Type header with the default UTF-8 charset using the `includeContentType` option:
+You can override the declared charset via the formatter options:
 
 ```typescript
-const vcardString = formatVCard(vcard, { includeContentType: true });
+const vcardString = formatVCard(vcard, { charset: 'ISO-8859-1' });
 ```
 
 ### Photo/Logo/Sound
@@ -238,7 +199,6 @@ The main VCard type representing a complete vCard object.
 
 See the TypeScript definitions for the complete list of optional fields including:
 
-- Character Set: `charset` - Character encoding (e.g., 'UTF-8', 'ISO-8859-1')
 - Identification: `nickname`, `photo`, `birthday`
 - Delivery Addressing: `addresses`, `labels`
 - Telecommunications: `phones`, `emails`, `mailer`
@@ -251,7 +211,7 @@ See the TypeScript definitions for the complete list of optional fields includin
 ### Function: formatVCard
 
 ```typescript
-function formatVCard(vcard: VCard, options?: { includeContentType?: boolean }): string;
+function formatVCard(vcard: VCard, options?: { charset?: 'UTF-8' | 'ISO-8859-1' | 'US-ASCII' }): string;
 ```
 
 Converts a VCard object into an RFC 2426 compliant VCard 3.0 string.
@@ -259,8 +219,8 @@ Converts a VCard object into an RFC 2426 compliant VCard 3.0 string.
 **Parameters:**
 
 - `vcard: VCard` - The VCard object to format
-- `options?: { includeContentType?: boolean }` - Optional formatting options
-  - `includeContentType` - If true, includes a Content-Type header with UTF-8 charset (default: false, unless `charset` is specified in vcard)
+- `options?: { charset?: 'UTF-8' | 'ISO-8859-1' | 'US-ASCII' }` - Optional formatting options
+  - `charset` - Charset to declare via `CHARSET` parameters on text properties (default: `UTF-8`)
 
 **Returns:**
 
@@ -270,7 +230,7 @@ Converts a VCard object into an RFC 2426 compliant VCard 3.0 string.
 
 - Automatic text escaping for special characters
 - Line folding for lines longer than 75 characters
-- Optional Content-Type header with charset support
+- `CHARSET` parameters on text properties (default: UTF-8)
 - Proper formatting of all VCard 3.0 properties
 - Date/DateTime formatting
 

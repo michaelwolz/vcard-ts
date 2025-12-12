@@ -13,12 +13,14 @@ export type {
   Classification,
   CustomProperty,
   Email,
+  FormatVCardOptions,
   Geo,
   Media,
   Name,
   Phone as Telephone,
   PhoneType as TelephoneType,
   Url,
+  VCardCharset,
   VCard,
 } from './types.js';
 

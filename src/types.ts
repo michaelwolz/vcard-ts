@@ -138,6 +138,22 @@ export type Url = {
 };
 
 /**
+ * Supported character sets.
+ *
+ * Note: vCard 3.0 (RFC 2426) indicates character sets via the CHARSET parameter
+ * on text properties. Most modern consumers assume UTF-8.
+ */
+export type VCardCharset = 'UTF-8' | 'ISO-8859-1' | 'US-ASCII';
+
+export type FormatVCardOptions = {
+  /**
+   * Charset to declare via `;CHARSET=...` parameters on text properties.
+   * Default: `UTF-8`.
+   */
+  charset?: VCardCharset;
+};
+
+/**
  * Main vCard object.
  * RFC 2426 requires FN, N and VERSION.
  */
@@ -146,9 +162,6 @@ export type VCard = {
   version: '3.0';
   formattedName: string;
   name: Name;
-
-  // OPTIONAL - Character Set (for MIME Content-Type header)
-  charset?: string;
 
   // OPTIONAL - Identification
   nickname?: string[];

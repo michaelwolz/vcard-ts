@@ -189,4 +189,4 @@ const vcardWithLinks: VCard = {
     { value: 'https://emiliywhite.dev', type: 'Personal' },
   ],
 };
-console.log(formatVCard(vcardWithLinks));
+console.log(formatVCard(vcardWithLinks, { charset: 'UTF-8' }));

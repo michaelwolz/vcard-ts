@@ -3,24 +3,24 @@
  * Converts VCard objects to RFC 2426 compliant strings
  */
 
-import type { Address, Email, Media, Name, Phone, Url, VCard } from './types.js';
+import type { Address, Email, FormatVCardOptions, Media, Name, Phone, Url, VCard } from './types.js';
 import { escapeParamValue, escapeText, foldLine, formatDate, formatDateTime } from './utils.js';
 
 /**
  * Format a VCard object into a valid VCard 3.0 string
  * @param vcard - VCard object to format
  * @param options - Optional formatting options
+ * @param options.charset - Charset to declare via CHARSET parameters (default: UTF-8)
  * @returns RFC 2426 compliant VCard string
  */
-export function formatVCard(vcard: VCard, options?: { includeContentType?: boolean }): string {
+export function formatVCard(vcard: VCard, options?: FormatVCardOptions): string {
   const lines: string[] = [];
 
-  // Content-Type header (OPTIONAL - for MIME encapsulation)
-  if (options?.includeContentType === true || vcard.charset !== undefined) {
-    const charset = vcard.charset ?? 'UTF-8';
-    lines.push(`Content-Type: text/directory;profile=vcard;charset=${charset}`);
-    lines.push(''); // Blank line after header
-  }
+  // RFC 2426: A vCard object MUST begin with BEGIN:VCARD.
+  // Character sets are expressed via the CHARSET parameter on text properties.
+  // Default: always use UTF-8.
+  const charset = options?.charset ?? 'UTF-8';
+  const charsetParam = `;CHARSET=${escapeParamValue(charset)}`;
 
   // BEGIN (REQUIRED)
   lines.push('BEGIN:VCARD');
@@ -29,14 +29,14 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
   lines.push('VERSION:3.0');
 
   // FN - Formatted Name (REQUIRED)
-  lines.push(`FN:${escapeText(vcard.formattedName)}`);
+  lines.push(`FN${charsetParam}:${escapeText(vcard.formattedName)}`);
 
   // N - Structured Name (REQUIRED)
-  lines.push(formatName(vcard.name));
+  lines.push(formatName(vcard.name, charsetParam));
 
   // NICKNAME (OPTIONAL)
   if (vcard.nickname !== undefined && vcard.nickname.length > 0) {
-    lines.push(`NICKNAME:${vcard.nickname.map(escapeText).join(',')}`);
+    lines.push(`NICKNAME${charsetParam}:${vcard.nickname.map(escapeText).join(',')}`);
   }
 
   // PHOTO (OPTIONAL)
@@ -53,7 +53,7 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
   // ADR - Addresses (OPTIONAL)
   if (vcard.addresses !== undefined) {
     vcard.addresses.forEach((addr) => {
-      lines.push(formatAddress(addr));
+      lines.push(formatAddress(addr, charsetParam));
     });
   }
 
@@ -61,7 +61,7 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
   if (vcard.labels !== undefined) {
     vcard.labels.forEach((label) => {
       const typeParam = label.types !== undefined && label.types.length > 0 ? `;TYPE=${label.types.join(',')}` : '';
-      lines.push(`LABEL${typeParam}:${escapeText(label.value)}`);
+      lines.push(`LABEL${typeParam}${charsetParam}:${escapeText(label.value)}`);
     });
   }
 
@@ -75,13 +75,13 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
   // EMAIL (OPTIONAL)
   if (vcard.emails !== undefined) {
     vcard.emails.forEach((email) => {
-      lines.push(formatEmail(email));
+      lines.push(formatEmail(email, charsetParam));
     });
   }
 
   // MAILER (OPTIONAL)
   if (vcard.mailer !== undefined) {
-    lines.push(`MAILER:${escapeText(vcard.mailer)}`);
+    lines.push(`MAILER${charsetParam}:${escapeText(vcard.mailer)}`);
   }
 
   // TZ - Timezone (OPTIONAL)
@@ -89,7 +89,7 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
     // RFC 2426 default is utc-offset; it can be reset to text using VALUE=text.
     const tz = vcard.timezone;
     const isUtcOffset = /^[+-]\d{2}:\d{2}$/.test(tz);
-    lines.push(isUtcOffset ? `TZ:${tz}` : `TZ;VALUE=text:${escapeText(tz)}`);
+    lines.push(isUtcOffset ? `TZ:${tz}` : `TZ;VALUE=text${charsetParam}:${escapeText(tz)}`);
   }
 
   // GEO - Geographic Position (OPTIONAL)
@@ -99,12 +99,12 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
 
   // TITLE (OPTIONAL)
   if (vcard.title !== undefined) {
-    lines.push(`TITLE:${escapeText(vcard.title)}`);
+    lines.push(`TITLE${charsetParam}:${escapeText(vcard.title)}`);
   }
 
   // ROLE (OPTIONAL)
   if (vcard.role !== undefined) {
-    lines.push(`ROLE:${escapeText(vcard.role)}`);
+    lines.push(`ROLE${charsetParam}:${escapeText(vcard.role)}`);
   }
 
   // LOGO (OPTIONAL)
@@ -117,7 +117,7 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
     if (vcard.agent.uri !== undefined) {
       lines.push(`AGENT;VALUE=uri:${vcard.agent.uri}`);
     } else if (vcard.agent.value !== undefined) {
-      lines.push(`AGENT:${escapeText(vcard.agent.value)}`);
+      lines.push(`AGENT${charsetParam}:${escapeText(vcard.agent.value)}`);
     }
   }
 
@@ -131,23 +131,23 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
       orgParts.push(...vcard.organization.units.map(escapeText));
     }
     if (orgParts.length > 0) {
-      lines.push(`ORG:${orgParts.join(';')}`);
+      lines.push(`ORG${charsetParam}:${orgParts.join(';')}`);
     }
   }
 
   // CATEGORIES (OPTIONAL)
   if (vcard.categories !== undefined && vcard.categories.length > 0) {
-    lines.push(`CATEGORIES:${vcard.categories.map(escapeText).join(',')}`);
+    lines.push(`CATEGORIES${charsetParam}:${vcard.categories.map(escapeText).join(',')}`);
   }
 
   // NOTE (OPTIONAL)
   if (vcard.note !== undefined) {
-    lines.push(`NOTE:${escapeText(vcard.note)}`);
+    lines.push(`NOTE${charsetParam}:${escapeText(vcard.note)}`);
   }
 
   // PRODID (OPTIONAL)
   if (vcard.productId !== undefined) {
-    lines.push(`PRODID:${escapeText(vcard.productId)}`);
+    lines.push(`PRODID${charsetParam}:${escapeText(vcard.productId)}`);
   }
 
   // REV - Revision (OPTIONAL)
@@ -158,7 +158,7 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
 
   // SORT-STRING (OPTIONAL)
   if (vcard.sortString !== undefined) {
-    lines.push(`SORT-STRING:${escapeText(vcard.sortString)}`);
+    lines.push(`SORT-STRING${charsetParam}:${escapeText(vcard.sortString)}`);
   }
 
   // SOUND (OPTIONAL)
@@ -168,7 +168,7 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
 
   // UID (OPTIONAL)
   if (vcard.uid !== undefined) {
-    lines.push(`UID:${escapeText(vcard.uid)}`);
+    lines.push(`UID${charsetParam}:${escapeText(vcard.uid)}`);
   }
 
   // URL(s) (OPTIONAL)
@@ -203,11 +203,16 @@ export function formatVCard(vcard: VCard, options?: { includeContentType?: boole
       let line = prop.name.toUpperCase();
 
       // Add parameters if present
-      if (prop.params !== undefined && Object.keys(prop.params).length > 0) {
-        const params = Object.entries(prop.params)
+      const params: Record<string, string> = {
+        charset,
+        ...(prop.params ?? {}),
+      };
+
+      if (Object.keys(params).length > 0) {
+        const rendered = Object.entries(params)
           .map(([key, value]) => `${key.toUpperCase()}=${escapeParamValue(value)}`)
           .join(';');
-        line += `;${params}`;
+        line += `;${rendered}`;
       }
 
       line += `:${escapeText(prop.value)}`;
@@ -241,7 +246,7 @@ function formatUrlsForApple(urls: Url[]): string[] {
 /**
  * Format the N (Name) property
  */
-function formatName(name: Name): string {
+function formatName(name: Name, charsetParam: string): string {
   const familyName = name.familyName !== undefined ? escapeText(name.familyName) : '';
   const givenName = name.givenName !== undefined ? escapeText(name.givenName) : '';
   const additionalNames =
@@ -257,13 +262,13 @@ function formatName(name: Name): string {
       ? name.honorificSuffixes.map(escapeText).join(',')
       : '';
 
-  return `N:${familyName};${givenName};${additionalNames};${prefixes};${suffixes}`;
+  return `N${charsetParam}:${familyName};${givenName};${additionalNames};${prefixes};${suffixes}`;
 }
 
 /**
  * Format the ADR (Address) property
  */
-function formatAddress(address: Address): string {
+function formatAddress(address: Address, charsetParam: string): string {
   const typeParam = address.types !== undefined && address.types.length > 0 ? `;TYPE=${address.types.join(',')}` : '';
 
   const poBox = address.postOfficeBox !== undefined ? escapeText(address.postOfficeBox) : '';
@@ -274,7 +279,7 @@ function formatAddress(address: Address): string {
   const postalCode = address.postalCode !== undefined ? escapeText(address.postalCode) : '';
   const country = address.country !== undefined ? escapeText(address.country) : '';
 
-  return `ADR${typeParam}:${poBox};${extAddr};${street};${locality};${region};${postalCode};${country}`;
+  return `ADR${typeParam}${charsetParam}:${poBox};${extAddr};${street};${locality};${region};${postalCode};${country}`;
 }
 
 /**
@@ -288,9 +293,9 @@ function formatTelephone(tel: Phone): string {
 /**
  * Format the EMAIL property
  */
-function formatEmail(email: Email): string {
+function formatEmail(email: Email, charsetParam: string): string {
   const typeParam = email.types !== undefined && email.types.length > 0 ? `;TYPE=${email.types.join(',')}` : '';
-  return `EMAIL${typeParam}:${escapeText(email.value)}`;
+  return `EMAIL${typeParam}${charsetParam}:${escapeText(email.value)}`;
 }
 
 /**
