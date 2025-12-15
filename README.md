@@ -1,3 +1,5 @@
+<img src="gh-header.svg" alt="vcard-ts header image" width="100%">
+
 # vcard-ts
 
 A simple, modern TypeScript library for creating VCard 3.0 (RFC 2426) formatted strings. Zero dependencies, fully typed, and works in both browser and Node.js environments.
