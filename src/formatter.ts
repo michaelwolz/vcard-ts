@@ -10,17 +10,17 @@ import { escapeParamValue, escapeText, foldLine, formatDate, formatDateTime } fr
  * Format a VCard object into a valid VCard 3.0 string
  * @param vcard - VCard object to format
  * @param options - Optional formatting options
- * @param options.charset - Charset to declare via CHARSET parameters (default: UTF-8)
+ * @param options.charset - (Legacy) Charset to declare via CHARSET parameters. If omitted, UTF-8 is assumed and no CHARSET is emitted.
  * @returns RFC 2426 compliant VCard string
  */
 export function formatVCard(vcard: VCard, options?: FormatVCardOptions): string {
   const lines: string[] = [];
 
   // RFC 2426: A vCard object MUST begin with BEGIN:VCARD.
-  // Character sets are expressed via the CHARSET parameter on text properties.
-  // Default: always use UTF-8.
-  const charset = options?.charset ?? 'UTF-8';
-  const charsetParam = `;CHARSET=${escapeParamValue(charset)}`;
+  // Note: CHARSET is not part of RFC 2426; it's kept as a legacy interoperability option.
+  // Default: assume UTF-8 and do NOT emit CHARSET unless explicitly requested.
+  const charset = options?.charset;
+  const charsetParam = charset !== undefined ? `;CHARSET=${escapeParamValue(charset)}` : '';
 
   // BEGIN (REQUIRED)
   lines.push('BEGIN:VCARD');
@@ -204,7 +204,7 @@ export function formatVCard(vcard: VCard, options?: FormatVCardOptions): string 
 
       // Add parameters if present
       const params: Record<string, string> = {
-        charset,
+        ...(charset !== undefined ? { charset } : {}),
         ...(prop.params ?? {}),
       };
 

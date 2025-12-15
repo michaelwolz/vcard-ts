@@ -16,8 +16,8 @@ describe('formatVCard', () => {
 
     expect(result).toContain('BEGIN:VCARD');
     expect(result).toContain('VERSION:3.0');
-    expect(result).toContain('FN;CHARSET=UTF-8:John Doe');
-    expect(result).toContain('N;CHARSET=UTF-8:Doe;John;;;');
+    expect(result).toContain('FN:John Doe');
+    expect(result).toContain('N:Doe;John;;;');
     expect(result).toContain('END:VCARD');
   });
 
@@ -35,7 +35,7 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result).toContain('N;CHARSET=UTF-8:Public;John;Quinlan;Mr.;Esq.');
+    expect(result).toContain('N:Public;John;Quinlan;Mr.;Esq.');
   });
 
   it('should escape special characters in text fields', () => {
@@ -50,8 +50,8 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result).toContain('FN;CHARSET=UTF-8:Test\\; User\\, with\\\\special chars');
-    expect(result).toContain('NOTE;CHARSET=UTF-8:Line 1\\nLine 2');
+    expect(result).toContain('FN:Test\\; User\\, with\\\\special chars');
+    expect(result).toContain('NOTE:Line 1\\nLine 2');
   });
 
   it('should normalize CRLF newlines to a single \\n escape', () => {
@@ -65,8 +65,8 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result).toContain('NOTE;CHARSET=UTF-8:Line 1\\nLine 2');
-    expect(result).not.toContain('NOTE;CHARSET=UTF-8:Line 1\\n\\nLine 2');
+    expect(result).toContain('NOTE:Line 1\\nLine 2');
+    expect(result).not.toContain('NOTE:Line 1\\n\\nLine 2');
   });
 
   it('should format addresses correctly', () => {
@@ -91,7 +91,7 @@ describe('formatVCard', () => {
 
     const result = formatVCard(vcard);
     expect(result.replace(/\r\n /g, '')).toContain(
-      'ADR;TYPE=home,postal;CHARSET=UTF-8:;;123 Main Street;Any Town;CA;91921-1234;U.S.A.'
+      'ADR;TYPE=home,postal:;;123 Main Street;Any Town;CA;91921-1234;U.S.A.'
     );
   });
 
@@ -137,7 +137,7 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result).toContain('EMAIL;TYPE=internet,pref;CHARSET=UTF-8:alice@example.com');
+    expect(result).toContain('EMAIL;TYPE=internet,pref:alice@example.com');
   });
 
   it('should format organizational information', () => {
@@ -157,9 +157,9 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result).toContain('ORG;CHARSET=UTF-8:ABC\\, Inc.;Engineering;Software');
-    expect(result).toContain('TITLE;CHARSET=UTF-8:Senior Developer');
-    expect(result).toContain('ROLE;CHARSET=UTF-8:Programmer');
+    expect(result).toContain('ORG:ABC\\, Inc.;Engineering;Software');
+    expect(result).toContain('TITLE:Senior Developer');
+    expect(result).toContain('ROLE:Programmer');
   });
 
   it('should format geographic coordinates', () => {
@@ -205,8 +205,8 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result).toContain('CATEGORIES;CHARSET=UTF-8:WORK,BUSINESS,DEVELOPER');
-    expect(result).toContain('NOTE;CHARSET=UTF-8:This is a test note');
+    expect(result).toContain('CATEGORIES:WORK,BUSINESS,DEVELOPER');
+    expect(result).toContain('NOTE:This is a test note');
   });
 
   it('should format photo with URI', () => {
@@ -239,7 +239,7 @@ describe('formatVCard', () => {
 
     const result = formatVCard(vcard);
     expect(result).toContain('URL:https://example.com');
-    expect(result).toContain('UID;CHARSET=UTF-8:urn:uuid:12345678-1234-1234-1234-123456789012');
+    expect(result).toContain('UID:urn:uuid:12345678-1234-1234-1234-123456789012');
   });
 
   it('should format multiple URLs with iOS labels using itemN.URL and itemN.X-ABLabel', () => {
@@ -338,12 +338,12 @@ describe('formatVCard', () => {
     expect(result.startsWith('BEGIN:VCARD')).toBe(true);
     expect(result.endsWith('END:VCARD')).toBe(true);
     expect(result).toContain('VERSION:3.0');
-    expect(result).toContain('FN;CHARSET=UTF-8:John Q. Public');
-    expect(result).toContain('N;CHARSET=UTF-8:Public;John;Quinlan;;');
-    expect(result).toContain('NICKNAME;CHARSET=UTF-8:Johnny,JQ');
+    expect(result).toContain('FN:John Q. Public');
+    expect(result).toContain('N:Public;John;Quinlan;;');
+    expect(result).toContain('NICKNAME:Johnny,JQ');
   });
 
-  it('should default to UTF-8 charset parameters', () => {
+  it('should not emit CHARSET parameters by default', () => {
     const vcard: VCard = {
       version: '3.0',
       formattedName: 'José García',
@@ -355,7 +355,8 @@ describe('formatVCard', () => {
 
     const result = formatVCard(vcard);
     expect(result.startsWith('BEGIN:VCARD')).toBe(true);
-    expect(result).toContain('FN;CHARSET=UTF-8:José García');
+    expect(result).toContain('FN:José García');
+    expect(result).not.toContain('CHARSET=');
   });
 
   it('should allow overriding charset via options', () => {
@@ -397,8 +398,8 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result).toContain('X-TWITTER;CHARSET=UTF-8:@johndoe');
-    expect(result).toContain('X-SOCIALPROFILE;CHARSET=UTF-8;TYPE=twitter:https://twitter.com/johndoe');
+    expect(result).toContain('X-TWITTER:@johndoe');
+    expect(result).toContain('X-SOCIALPROFILE;TYPE=twitter:https://twitter.com/johndoe');
   });
 
   it('should support custom properties with multiple parameters', () => {
@@ -424,7 +425,7 @@ describe('formatVCard', () => {
     const result = formatVCard(vcard);
     // Check for the property with both parameters (may be folded across lines)
     expect(result.replace(/\r\n /g, '')).toContain(
-      'X-SOCIALPROFILE;CHARSET=UTF-8;TYPE=linkedin;USERID=janesmith:https://linkedin.com/in/janesmith'
+      'X-SOCIALPROFILE;TYPE=linkedin;USERID=janesmith:https://linkedin.com/in/janesmith'
     );
   });
 
@@ -444,6 +445,6 @@ describe('formatVCard', () => {
     };
 
     expect(formatVCard(vcardOffset)).toContain('TZ:-05:00');
-    expect(formatVCard(vcardText)).toContain('TZ;VALUE=text;CHARSET=UTF-8:-05:00\\; EST');
+    expect(formatVCard(vcardText)).toContain('TZ;VALUE=text:-05:00\\; EST');
   });
 });

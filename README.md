@@ -50,18 +50,18 @@ Output:
 ```
 BEGIN:VCARD
 VERSION:3.0
-FN;CHARSET=UTF-8:John Doe
-N;CHARSET=UTF-8:Doe;John;;;
+FN:John Doe
+N:Doe;John;;;
 END:VCARD
 ```
 
 ### Character Set Support
 
-VCard 3.0 supports specifying a character set via the `CHARSET` parameter on text properties (RFC 2426).
+Some legacy vCard consumers expect or require a `CHARSET=...` parameter on text properties.
 
-This library emits `;CHARSET=...` on text fields like `FN`, `N`, `NOTE`, etc.
+Note: `CHARSET` is not defined in RFC 2426 itself; this library supports it as a legacy interoperability option.
 
-Default charset is `UTF-8`.
+By default, the formatter assumes UTF-8 and does **not** emit any `CHARSET` parameters.
 
 ```typescript
 import { formatVCard, type VCard } from 'vcard-ts';
@@ -84,12 +84,12 @@ Output:
 ```
 BEGIN:VCARD
 VERSION:3.0
-FN;CHARSET=UTF-8:José García
-N;CHARSET=UTF-8:García;José;;;
+FN:José García
+N:García;José;;;
 END:VCARD
 ```
 
-You can override the declared charset via the formatter options:
+If you need legacy interoperability, you can explicitly declare a charset via formatter options:
 
 ```typescript
 const vcardString = formatVCard(vcard, { charset: 'ISO-8859-1' });
@@ -222,7 +222,7 @@ Converts a VCard object into an RFC 2426 compliant VCard 3.0 string.
 
 - `vcard: VCard` - The VCard object to format
 - `options?: { charset?: 'UTF-8' | 'ISO-8859-1' | 'US-ASCII' }` - Optional formatting options
-  - `charset` - Charset to declare via `CHARSET` parameters on text properties (default: `UTF-8`)
+  - `charset` - (Legacy) Charset to declare via `CHARSET` parameters on text properties. If omitted, UTF-8 is assumed and no `CHARSET` is emitted.
 
 **Returns:**
 
@@ -232,7 +232,7 @@ Converts a VCard object into an RFC 2426 compliant VCard 3.0 string.
 
 - Automatic text escaping for special characters
 - Line folding for lines longer than 75 characters
-- `CHARSET` parameters on text properties (default: UTF-8)
+- `CHARSET` parameters on text properties (legacy; only emitted when explicitly requested)
 - Proper formatting of all VCard 3.0 properties
 - Date/DateTime formatting
 

@@ -140,15 +140,15 @@ export type Url = {
 /**
  * Supported character sets.
  *
- * Note: vCard 3.0 (RFC 2426) indicates character sets via the CHARSET parameter
- * on text properties. Most modern consumers assume UTF-8.
+ * Note: `CHARSET` is not defined in RFC 2426 itself; this library supports it as a
+ * legacy interoperability option for consumers that still expect it.
  */
 export type VCardCharset = 'UTF-8' | 'ISO-8859-1' | 'US-ASCII';
 
 export type FormatVCardOptions = {
   /**
-   * Charset to declare via `;CHARSET=...` parameters on text properties.
-   * Default: `UTF-8`.
+   * (Legacy) Charset to declare via `;CHARSET=...` parameters on text properties.
+   * If omitted, UTF-8 is assumed and no `CHARSET` parameter is emitted.
    */
   charset?: VCardCharset;
 };
