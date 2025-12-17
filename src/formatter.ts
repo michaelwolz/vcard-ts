@@ -6,15 +6,6 @@
 import type { Address, Email, FormatVCardOptions, Media, Name, Phone, Url, VCard } from './types.js';
 import { escapeParamValue, escapeText, foldLine, formatDate, formatDateTime } from './utils.js';
 
-function formatTypeParam(types: string[] | undefined): string {
-  if (types === undefined || types.length === 0) {
-    return '';
-  }
-
-  // TYPE values are case-insensitive, but some consumers are picky; normalize to uppercase.
-  return `;TYPE=${types.map((t) => t.toUpperCase()).join(',')}`;
-}
-
 /**
  * Format a VCard object into a valid VCard 3.0 string
  * @param vcard - VCard object to format
@@ -339,4 +330,18 @@ function formatMedia(propertyName: string, media: Media): string[] {
   }
 
   return lines;
+}
+
+/**
+ * Format TYPE parameter from types array
+ *
+ * @param types array of type strings
+ * @returns formatted TYPE parameter or empty string
+ */
+function formatTypeParam(types: string[] | undefined): string {
+  if (types === undefined || types.length === 0) {
+    return '';
+  }
+
+  return `;TYPE=${types.join(',')}`;
 }
