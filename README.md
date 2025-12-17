@@ -124,6 +124,33 @@ const vcardWithInlinePhoto: VCard = {
 };
 ```
 
+### Android / Google Contacts Import Note
+
+Some Android/Google Contacts imports can mis-parse folded lines (RFC 2426 line folding with `CRLF + space`), especially for structured properties like `ADR`. If you see parts of the address appear as a name suffix or the address disappears, disable folding:
+
+```typescript
+import { formatVCard, type VCard } from 'vcard-ts';
+
+const vcard: VCard = {
+  version: '3.0',
+  formattedName: 'Jane Smith',
+  name: { familyName: 'Smith', givenName: 'Jane' },
+  addresses: [
+    {
+      street: '100 Tech Plaza',
+      locality: 'San Francisco',
+      region: 'CA',
+      postalCode: '94105',
+      country: 'United States of America',
+      types: ['work'],
+    },
+  ],
+};
+
+// Keeps ADR on a single line (no folded continuations)
+const vcardString = formatVCard(vcard, { foldLines: false });
+```
+
 ### Special Characters
 
 The library automatically escapes special characters according to RFC 2426:
@@ -214,6 +241,9 @@ See the TypeScript definitions for the complete list of optional fields includin
 
 ```typescript
 function formatVCard(vcard: VCard, options?: { charset?: 'UTF-8' | 'ISO-8859-1' | 'US-ASCII' }): string;
+
+// You can also disable RFC line folding for Android/Google Contacts compatibility:
+// formatVCard(vcard, { foldLines: false })
 ```
 
 Converts a VCard object into an RFC 2426 compliant VCard 3.0 string.
@@ -221,8 +251,9 @@ Converts a VCard object into an RFC 2426 compliant VCard 3.0 string.
 **Parameters:**
 
 - `vcard: VCard` - The VCard object to format
-- `options?: { charset?: 'UTF-8' | 'ISO-8859-1' | 'US-ASCII' }` - Optional formatting options
+- `options?: { charset?: 'UTF-8' | 'ISO-8859-1' | 'US-ASCII'; fold?: boolean }` - Optional formatting options
   - `charset` - (Legacy) Charset to declare via `CHARSET` parameters on text properties. If omitted, UTF-8 is assumed and no `CHARSET` is emitted.
+  - `foldLines` - Whether to apply RFC 2426 line folding (75 characters, CRLF + space). Default: `true`. Set to `false` if Android/Google Contacts mis-parses folded ADR lines.
 
 **Returns:**
 

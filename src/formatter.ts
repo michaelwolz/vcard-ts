@@ -6,6 +6,15 @@
 import type { Address, Email, FormatVCardOptions, Media, Name, Phone, Url, VCard } from './types.js';
 import { escapeParamValue, escapeText, foldLine, formatDate, formatDateTime } from './utils.js';
 
+function formatTypeParam(types: string[] | undefined): string {
+  if (types === undefined || types.length === 0) {
+    return '';
+  }
+
+  // TYPE values are case-insensitive, but some consumers are picky; normalize to uppercase.
+  return `;TYPE=${types.map((t) => t.toUpperCase()).join(',')}`;
+}
+
 /**
  * Format a VCard object into a valid VCard 3.0 string
  * @param vcard - VCard object to format
@@ -21,6 +30,7 @@ export function formatVCard(vcard: VCard, options?: FormatVCardOptions): string 
   // Default: assume UTF-8 and do NOT emit CHARSET unless explicitly requested.
   const charset = options?.charset;
   const charsetParam = charset !== undefined ? `;CHARSET=${escapeParamValue(charset)}` : '';
+  const shouldFoldLines = options?.foldLines !== false;
 
   // BEGIN (REQUIRED)
   lines.push('BEGIN:VCARD');
@@ -60,7 +70,7 @@ export function formatVCard(vcard: VCard, options?: FormatVCardOptions): string 
   // LABEL (OPTIONAL)
   if (vcard.labels !== undefined) {
     vcard.labels.forEach((label) => {
-      const typeParam = label.types !== undefined && label.types.length > 0 ? `;TYPE=${label.types.join(',')}` : '';
+      const typeParam = formatTypeParam(label.types);
       lines.push(`LABEL${typeParam}${charsetParam}:${escapeText(label.value)}`);
     });
   }
@@ -224,7 +234,7 @@ export function formatVCard(vcard: VCard, options?: FormatVCardOptions): string 
   lines.push('END:VCARD');
 
   // Fold lines longer than 75 characters
-  return lines.map(foldLine).join('\r\n');
+  return shouldFoldLines ? lines.map(foldLine).join('\r\n') : lines.join('\r\n');
 }
 
 function formatUrlsForApple(urls: Url[]): string[] {
@@ -269,7 +279,7 @@ function formatName(name: Name, charsetParam: string): string {
  * Format the ADR (Address) property
  */
 function formatAddress(address: Address, charsetParam: string): string {
-  const typeParam = address.types !== undefined && address.types.length > 0 ? `;TYPE=${address.types.join(',')}` : '';
+  const typeParam = formatTypeParam(address.types);
 
   const poBox = address.postOfficeBox !== undefined ? escapeText(address.postOfficeBox) : '';
   const extAddr = address.extendedAddress !== undefined ? escapeText(address.extendedAddress) : '';
@@ -286,7 +296,7 @@ function formatAddress(address: Address, charsetParam: string): string {
  * Format the TEL (Telephone) property
  */
 function formatTelephone(tel: Phone): string {
-  const typeParam = tel.types !== undefined && tel.types.length > 0 ? `;TYPE=${tel.types.join(',')}` : '';
+  const typeParam = formatTypeParam(tel.types);
   return `TEL${typeParam}:${tel.value}`;
 }
 
@@ -294,7 +304,7 @@ function formatTelephone(tel: Phone): string {
  * Format the EMAIL property
  */
 function formatEmail(email: Email, charsetParam: string): string {
-  const typeParam = email.types !== undefined && email.types.length > 0 ? `;TYPE=${email.types.join(',')}` : '';
+  const typeParam = formatTypeParam(email.types);
   return `EMAIL${typeParam}${charsetParam}:${escapeText(email.value)}`;
 }
 

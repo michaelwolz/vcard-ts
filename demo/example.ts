@@ -27,12 +27,13 @@ const businessContact: VCard = {
     familyName: 'Smith',
     givenName: 'Jane',
     honorificPrefixes: ['Ms.'],
+    honorificSuffixes: ['MBA'],
   },
   organization: {
     name: 'Tech Corp',
     units: ['Engineering', 'Frontend'],
   },
-  title: 'Senior Developer',
+  title: 'Senior Full Stack Developer',
   emails: [{ value: 'jane.smith@techcorp.com', types: ['internet', 'pref'] }],
   phones: [
     { value: '+1-555-0100', types: ['work', 'voice'] },
@@ -44,7 +45,7 @@ const businessContact: VCard = {
       locality: 'San Francisco',
       region: 'CA',
       postalCode: '94105',
-      country: 'USA',
+      country: 'United States of America',
       types: ['work'],
     },
   ],

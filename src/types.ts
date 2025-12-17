@@ -151,6 +151,15 @@ export type FormatVCardOptions = {
    * If omitted, UTF-8 is assumed and no `CHARSET` parameter is emitted.
    */
   charset?: VCardCharset;
+
+  /**
+   * Whether to apply RFC 2426 line folding (75 characters, CRLF + space).
+   * Default: true.
+   *
+   * Some consumers (notably Android/Google Contacts) can mis-parse folded lines.
+   * If you run into import issues, set this to false to disable folding.
+   */
+  foldLines?: boolean;
 };
 
 /**

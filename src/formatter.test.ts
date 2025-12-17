@@ -90,8 +90,8 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result.replace(/\r\n /g, '')).toContain(
-      'ADR;TYPE=home,postal:;;123 Main Street;Any Town;CA;91921-1234;U.S.A.'
+      expect(result.replace(/\r\n /g, '')).toContain(
+        'ADR;TYPE=HOME,POSTAL:;;123 Main Street;Any Town;CA;91921-1234;U.S.A.'
     );
   });
 
@@ -116,8 +116,8 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result).toContain('TEL;TYPE=work,voice:+1-555-1234');
-    expect(result).toContain('TEL;TYPE=home,cell:+1-555-5678');
+      expect(result).toContain('TEL;TYPE=WORK,VOICE:+1-555-1234');
+      expect(result).toContain('TEL;TYPE=HOME,CELL:+1-555-5678');
   });
 
   it('should format email addresses', () => {
@@ -137,7 +137,7 @@ describe('formatVCard', () => {
     };
 
     const result = formatVCard(vcard);
-    expect(result).toContain('EMAIL;TYPE=internet,pref:alice@example.com');
+      expect(result).toContain('EMAIL;TYPE=INTERNET,PREF:alice@example.com');
   });
 
   it('should format organizational information', () => {
@@ -446,5 +446,27 @@ describe('formatVCard', () => {
 
     expect(formatVCard(vcardOffset)).toContain('TZ:-05:00');
     expect(formatVCard(vcardText)).toContain('TZ;VALUE=text:-05:00\\; EST');
+  });
+
+  it('should allow disabling line folding for interoperability', () => {
+    const vcard: VCard = {
+      version: '3.0',
+      formattedName: 'Jane Smith',
+      name: { familyName: 'Smith', givenName: 'Jane' },
+      addresses: [
+        {
+          street: '100 Tech Plaza',
+          locality: 'San Francisco',
+          region: 'CA',
+          postalCode: '94105',
+          country: 'United States of America',
+          types: ['work'],
+        },
+      ],
+    };
+
+    const result = formatVCard(vcard, { foldLines: false });
+    expect(result).not.toContain('\r\n ');
+    expect(result).toContain('ADR;TYPE=WORK:;;100 Tech Plaza;San Francisco;CA;94105;United States of America');
   });
 });
