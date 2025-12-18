@@ -173,10 +173,8 @@ export function formatVCard(vcard: VCard, options?: FormatVCardOptions): string 
   }
 
   // URL(s) (OPTIONAL)
-  // - RFC 2426: URL itself has no parameters, but group prefixes are allowed.
-  // - iOS: labels for URLs are commonly supported via the Apple extension `X-ABLabel`.
   if (vcard.urls !== undefined && vcard.urls.length > 0) {
-    lines.push(...formatUrlsForApple(vcard.urls));
+    lines.push(...formatUrls(vcard.urls));
   }
 
   // Keep the legacy single URL field as a plain URL line.
@@ -228,7 +226,15 @@ export function formatVCard(vcard: VCard, options?: FormatVCardOptions): string 
   return shouldFoldLines ? lines.map(foldLine).join('\r\n') : lines.join('\r\n');
 }
 
-function formatUrlsForApple(urls: Url[]): string[] {
+
+/**
+ * RFC 2426 only has one URL property but via groups we can support multiple URLs.
+ * For iOS a label can be assigned via the X-ABLabel extension.
+ *
+ * @param urls array of Url entries
+ * @returns formatted URL lines
+ */
+function formatUrls(urls: Url[]): string[] {
   const lines: string[] = [];
 
   urls.forEach((entry, index) => {

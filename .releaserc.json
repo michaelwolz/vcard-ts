@@ -1,7 +1,6 @@
 {
-  "repositoryUrl": "https://github.com/michaelwolz/vcard-ts.git",
   "branches": ["master"],
-  "tagFormat": "v${version}",
+  "tagFormat": "${version}",
   "plugins": [
     ["@semantic-release/commit-analyzer", { "preset": "conventionalcommits" }],
     ["@semantic-release/release-notes-generator", { "preset": "conventionalcommits" }],
