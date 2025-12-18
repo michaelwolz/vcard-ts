@@ -1,3 +1,13 @@
+## [2.0.0](https://github.com/michaelwolz/vcard-ts/compare/1.0.0...2.0.0) (2025-12-18)
+
+### ⚠ BREAKING CHANGES
+
+* 2.0.0
+
+### Features
+
+* 2.0.0 ([dc0ae76](https://github.com/michaelwolz/vcard-ts/commit/dc0ae7642f9ff0bf7dad2b4dc1f98538fc162f25))
+
 ## [1.0.0](https://github.com/michaelwolz/vcard-ts/compare/0.1.0...1.0.0) (2025-12-18)
 
 ### ⚠ BREAKING CHANGES
