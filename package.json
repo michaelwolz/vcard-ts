@@ -1,6 +1,6 @@
 {
   "name": "vcard-ts",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "A simple, modern TypeScript library for VCard 3.0 (RFC 2426) with browser and Node.js support",
   "keywords": [
     "vcard",
